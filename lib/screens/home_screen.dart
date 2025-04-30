@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'materials_screen.dart';
+import 'processes_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/material_provider.dart';
 import '../models/material.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
+import '../providers/process_provider.dart';
+import '../widgets/add_process_dialog.dart';
+import 'scan_materials_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -166,6 +170,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: _screens[_selectedIndex],
+      floatingActionButton: isAdmin && _selectedIndex == 2
+          ? FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const AddProcessDialog(),
+                );
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -431,17 +446,6 @@ class AnalyticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text('Analytics Screen - Coming Soon'),
-    );
-  }
-}
-
-class ScanMaterialsScreen extends StatelessWidget {
-  const ScanMaterialsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Scan Materials Screen - Coming Soon'),
     );
   }
 }

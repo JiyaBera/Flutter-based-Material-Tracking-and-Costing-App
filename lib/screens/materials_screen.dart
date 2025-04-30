@@ -25,7 +25,32 @@ class MaterialsScreen extends StatelessWidget {
           
           if (materials.isEmpty) {
             return const Center(
-              child: Text('No materials found. Add some materials to get started.'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'No materials found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Add materials through the operator scan screen',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
@@ -164,6 +189,9 @@ class _MaterialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isInStock = material.quantity >= material.minStockLevel;
+    final stockColor = isInStock ? Colors.green : Colors.orange;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
@@ -180,19 +208,43 @@ class _MaterialCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                _StockStatusChip(material: material),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: stockColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: stockColor),
+                  ),
+                  child: Text(
+                    isInStock ? 'In Stock' : 'Low Stock',
+                    style: TextStyle(
+                      color: stockColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Current Stock: ${material.quantity}',
-              style: Theme.of(context).textTheme.bodyLarge,
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.inventory_2_outlined,
+                    label: 'Current Stock',
+                    value: material.quantity.toString(),
+                  ),
+                ),
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.warning_outlined,
+                    label: 'Min. Stock Level',
+                    value: material.minStockLevel.toString(),
+                  ),
+                ),
+              ],
             ),
-            Text(
-              'Minimum Stock Level: ${material.minStockLevel}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -222,6 +274,7 @@ class _MaterialCard extends StatelessWidget {
           controller: controller,
           decoration: const InputDecoration(
             labelText: 'New Stock Level',
+            border: OutlineInputBorder(),
           ),
           keyboardType: TextInputType.number,
         ),
@@ -230,7 +283,7 @@ class _MaterialCard extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               final newQuantity = int.tryParse(controller.text);
               if (newQuantity != null && newQuantity >= 0) {
@@ -238,6 +291,19 @@ class _MaterialCard extends StatelessWidget {
                   material.copyWith(quantity: newQuantity),
                 );
                 Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Stock updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid quantity'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
             child: const Text('Update'),
@@ -248,23 +314,43 @@ class _MaterialCard extends StatelessWidget {
   }
 }
 
-class _StockStatusChip extends StatelessWidget {
-  final MaterialItem material;
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
 
-  const _StockStatusChip({required this.material});
+  const _InfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isInStock = material.quantity >= material.minStockLevel;
-    final color = isInStock ? Colors.green : Colors.orange;
-
-    return Chip(
-      label: Text(
-        isInStock ? 'In Stock' : 'Low Stock',
-        style: TextStyle(color: color),
-      ),
-      backgroundColor: color.withOpacity(0.1),
-      side: BorderSide(color: color),
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 } 

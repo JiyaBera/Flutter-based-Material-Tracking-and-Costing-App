@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'providers/material_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/process_provider.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MaterialProvider()),
+        ChangeNotifierProvider(create: (_) => ProcessProvider()),
       ],
       child: MaterialApp(
         title: 'SmartFab Industries',
