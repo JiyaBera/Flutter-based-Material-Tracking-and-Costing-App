@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import 'home_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,57 +23,72 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement actual login logic
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+  Future<void> _login() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isLoading = true);
+
+      final success = await context.read<AuthProvider>().login(
+        _emailController.text,
+        _passwordController.text,
       );
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (success) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid email or password'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 48),
-                Text(
-                  'Welcome Back',
-                  style: GoogleFonts.poppins(
+                const Icon(
+                  Icons.factory,
+                  size: 100,
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'SmartFab',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sign in to continue',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
                 TextFormField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
                   ),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
                     }
                     return null;
                   },
@@ -82,84 +96,37 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
-                    ),
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
                   ),
+                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _handleLogin,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Text(
-                      'Sign In',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Login'),
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement forgot password
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: AppTheme.primaryColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Don\'t have an account? ',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+                const Text(
+                  'Default accounts:\n'
+                  'Admin: admin@smartfab.com\n'
+                  'Operator: operator@smartfab.com\n'
+                  'Password: any password will work for demo',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
                 ),
               ],
             ),
